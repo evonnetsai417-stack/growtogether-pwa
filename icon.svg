@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- 背景 -->
+  <rect width="512" height="512" rx="120" fill="#FFF4DD"/>
+  <!-- 蛋殼 -->
+  <ellipse cx="256" cy="300" rx="130" ry="160" fill="#FFF8E7" stroke="#1a1a1a" stroke-width="12"/>
+  <!-- 蛋殼斑點 -->
+  <circle cx="210" cy="270" r="20" fill="#F5C24E"/>
+  <circle cx="300" cy="330" r="15" fill="#F5C24E"/>
+  <circle cx="235" cy="370" r="13" fill="#F5C24E"/>
+  <!-- 小臉 -->
+  <circle cx="230" cy="295" r="12" fill="#1a1a1a"/>
+  <circle cx="235" cy="290" r="5" fill="#fff"/>
+  <circle cx="282" cy="295" r="12" fill="#1a1a1a"/>
+  <circle cx="287" cy="290" r="5" fill="#fff"/>
+  <!-- 嘴 -->
+  <path d="M 240 320 Q 256 335 272 320" fill="none" stroke="#1a1a1a" stroke-width="8" stroke-linecap="round"/>
+  <!-- 腮紅 -->
+  <ellipse cx="215" cy="315" rx="14" ry="9" fill="#FFB3B3" opacity="0.7"/>
+  <ellipse cx="297" cy="315" rx="14" ry="9" fill="#FFB3B3" opacity="0.7"/>
+  <!-- 標題 -->
+  <text x="256" y="500" font-size="52" font-weight="900" text-anchor="middle" fill="#1a1a1a" font-family="system-ui">一起長大</text>
+</svg>

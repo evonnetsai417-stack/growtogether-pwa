@@ -1,0 +1,13 @@
+{
+  "name": "一起長大",
+  "short_name": "一起長大",
+  "description": "兒童電子寵物獎勵 App",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#FFF4DD",
+  "theme_color": "#FFF4DD",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
