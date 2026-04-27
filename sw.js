@@ -1,4 +1,4 @@
-const CACHE = 'growtogether-v1';
+const CACHE = 'growtogether-v3';
 
 // 本地資源
 const LOCAL_ASSETS = [
