@@ -401,8 +401,8 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
     return `就差一點點！加油衝刺！🌟`;
   },[state.stage,state.xp]);
 
-  // 裝扮位置
-  const COSTUME_POS={ head:{top:-8,fontSize:36}, face:{top:22,fontSize:30}, neck:{top:60,fontSize:32} };
+  // 裝扮位置（head ≈ 耳頂，face ≈ 眼睛，neck ≈ 脖子）
+  const COSTUME_POS={ head:{top:28,fontSize:26}, face:{top:40,fontSize:22}, neck:{top:68,fontSize:26} };
   const activeCostume=COSTUMES.find(c=>c.id===state.costume);
 
   const renderPet=()=>{
@@ -509,24 +509,6 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
       {/* ─ 底部 ─ */}
       <div style={{ position:'absolute',bottom:18,left:12,right:12,zIndex:10 }}>
 
-        {/* 每日任務條（小朋友視角） */}
-        {state.stage!==STAGE.ADULT&&state.dailyTasks&&(()=>{
-          const dt=state.dailyTasks;
-          return (
-            <div style={{ background:'rgba(255,255,255,0.92)',border:'2.5px solid #1a1a1a',borderRadius:14,padding:'8px 10px',marginBottom:7,boxShadow:'0 2px 0 #1a1a1a' }}>
-              <div style={{ fontSize:11,fontWeight:800,color:'#555',marginBottom:6,fontFamily:'"Noto Sans TC",system-ui' }}>📋 今日任務（請爸媽幫你點 ✓）</div>
-              <div style={{ display:'flex',gap:6 }}>
-                {dt.tasks.map(t=>{ const done=dt.doneIds.includes(t.id); return (
-                  <div key={t.id} style={{ flex:1,textAlign:'center',background:done?'#E8FFE8':'#fff',border:`2px solid ${done?COLORS.secondary:'#ddd'}`,borderRadius:10,padding:'5px 4px' }}>
-                    <div style={{ fontSize:18 }}>{done?'✅':t.emoji}</div>
-                    <div style={{ fontSize:9,fontWeight:800,color:done?COLORS.secondary:'#888',marginTop:2,lineHeight:1.2 }}>{t.text.slice(0,5)}…</div>
-                  </div>
-                ); })}
-              </div>
-            </div>
-          );
-        })()}
-
         {/* 升級鼓勵條 */}
         {state.stage!==STAGE.ADULT&&(
           <div style={{ background:'rgba(255,255,255,0.92)',border:'2.5px solid #1a1a1a',borderRadius:14,padding:'7px 12px',marginBottom:8,boxShadow:'0 2px 0 #1a1a1a' }}>
@@ -540,34 +522,41 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
           </div>
         )}
 
-        {/* 快捷道具 */}
-        {state.stage!==STAGE.EGG&&(
-          <div style={{ background:'rgba(255,255,255,0.88)',backdropFilter:'blur(8px)',border:'2.5px solid #1a1a1a',borderRadius:18,padding:10,marginBottom:10,boxShadow:'0 3px 0 #1a1a1a' }}>
-            <div style={{ fontSize:11,fontWeight:800,marginBottom:6,color:'#666',textAlign:'center' }}>👆 點擊或拖到寵物身上使用</div>
-            <div style={{ display:'flex',justifyContent:'space-around',gap:8 }}>
-              {[{type:'food',color:COLORS.primary,label:'食物'},{type:'toy',color:COLORS.blue,label:'玩具'},{type:'care',color:COLORS.secondary,label:'清潔'}].map(({type,color,label})=>{
-                const it=quickItems[type];
-                return(
-                  <div key={type} style={{ flex:1,textAlign:'center' }}>
-                    {it?(
-                      <button draggable onDragStart={()=>setDraggedItem({type,item:it})} onClick={()=>{ if(type==='food')feed(it); else if(type==='toy')playWith(it); else clean(it); }}
-                        style={{ width:56,height:56,borderRadius:14,background:color,border:'2.5px solid #1a1a1a',fontSize:28,cursor:'grab',boxShadow:'0 3px 0 #1a1a1a',position:'relative',padding:0 }}>
-                        {it.emoji}
-                        <div style={{ position:'absolute',top:-5,right:-5,background:'#fff',color:'#1a1a1a',border:'2px solid #1a1a1a',borderRadius:'50%',width:20,height:20,fontSize:11,fontWeight:900,display:'flex',alignItems:'center',justifyContent:'center' }}>{state.inventory[it.id]}</div>
-                      </button>
-                    ):(
-                      <button onClick={()=>setScreen('shop')} style={{ width:56,height:56,borderRadius:14,background:'#fff',border:'2.5px dashed #999',fontSize:22,cursor:'pointer',color:'#999' }}>+</button>
-                    )}
-                    <div style={{ fontSize:11,fontWeight:700,marginTop:2 }}>{label}</div>
-                  </div>
-                );
-              })}
+        {/* 6 個按鈕合一排：道具 + 功能 */}
+        <div style={{ display:'flex', justifyContent:'space-around', alignItems:'flex-end', gap:4, background:'rgba(255,255,255,0.88)', backdropFilter:'blur(8px)', border:'2.5px solid #1a1a1a', borderRadius:18, padding:'10px 8px 8px', boxShadow:'0 3px 0 #1a1a1a' }}>
+          {/* 食物/玩具/清潔 — 道具快捷 */}
+          {state.stage!==STAGE.EGG && [
+            {type:'food', color:COLORS.primary,   label:'食物'},
+            {type:'toy',  color:COLORS.blue,       label:'玩具'},
+            {type:'care', color:COLORS.secondary,  label:'清潔'},
+          ].map(({type,color,label})=>{
+            const it=quickItems[type];
+            return (
+              <div key={type} style={{ flex:1, textAlign:'center' }}>
+                {it ? (
+                  <button draggable onDragStart={()=>setDraggedItem({type,item:it})}
+                    onClick={()=>{ if(type==='food')feed(it); else if(type==='toy')playWith(it); else clean(it); }}
+                    style={{ width:50,height:50,borderRadius:12,background:color,border:'2.5px solid #1a1a1a',fontSize:24,cursor:'grab',boxShadow:'0 3px 0 #1a1a1a',position:'relative',padding:0 }}>
+                    {it.emoji}
+                    <div style={{ position:'absolute',top:-5,right:-5,background:'#fff',color:'#1a1a1a',border:'2px solid #1a1a1a',borderRadius:'50%',width:18,height:18,fontSize:10,fontWeight:900,display:'flex',alignItems:'center',justifyContent:'center' }}>{state.inventory[it.id]}</div>
+                  </button>
+                ) : (
+                  <button onClick={()=>setScreen('shop')} style={{ width:50,height:50,borderRadius:12,background:'#fff',border:'2.5px dashed #bbb',fontSize:20,cursor:'pointer',color:'#bbb' }}>+</button>
+                )}
+                <div style={{ fontSize:10,fontWeight:700,marginTop:3,color:'#555' }}>{label}</div>
+              </div>
+            );
+          })}
+          {/* 蛋階段：道具欄位 placeholder */}
+          {state.stage===STAGE.EGG && [1,2,3].map(i=>(
+            <div key={i} style={{ flex:1, textAlign:'center' }}>
+              <div style={{ width:50,height:50,margin:'0 auto',borderRadius:12,background:'rgba(255,255,255,0.3)',border:'2px dashed #ccc' }}/>
+              <div style={{ fontSize:10,marginTop:3,color:'#ccc' }}>—</div>
             </div>
-          </div>
-        )}
-
-        {/* 主功能按鈕 */}
-        <div style={{ display:'flex',justifyContent:'space-around',alignItems:'center' }}>
+          ))}
+          {/* 分隔 */}
+          <div style={{ width:1, height:44, background:'#ddd', alignSelf:'center', margin:'0 2px' }}/>
+          {/* 商店/遊戲/醫生 */}
           <IconButton icon="🏪" label="商店"  color={COLORS.primary}   onClick={()=>setScreen('shop')}/>
           <IconButton icon="🎮" label="遊戲"  color={COLORS.pink}      onClick={()=>setScreen('gamemenu')} disabled={state.stage===STAGE.EGG||state.sleeping}/>
           <IconButton icon="🏥" label="醫生"  color={COLORS.secondary} onClick={visitDoctor} disabled={state.stage===STAGE.EGG} badge={state.health<50?'!':null}/>

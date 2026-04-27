@@ -2,16 +2,19 @@
 
 // ── 預設好行為清單 ────────────────────────────────────────────
 const DEFAULT_GOOD_DEEDS = [
-  { id: 'd1',  emoji: '🍽️', text: '幫忙收碗盤',       points: 1 },
-  { id: 'd2',  emoji: '🧹', text: '掃地或拖地',       points: 2 },
-  { id: 'd3',  emoji: '🧦', text: '自己摺衣服',       points: 1 },
-  { id: 'd4',  emoji: '📚', text: '主動完成功課',     points: 2 },
-  { id: 'd5',  emoji: '🦷', text: '自己刷牙洗臉',     points: 1 },
-  { id: 'd8',  emoji: '🤝', text: '對人有禮貌',       points: 1 },
-  { id: 'd9',  emoji: '😊', text: '幫助弟弟妹妹',     points: 2 },
-  { id: 'd10', emoji: '🌱', text: '幫忙澆花/做家事', points: 1 },
-  { id: 'd11', emoji: '🧠', text: '看書 30 分鐘',     points: 2 },
-  { id: 'd12', emoji: '💪', text: '運動 30 分鐘',     points: 2 },
+  { id: 'd1',  emoji: '🍽️', text: '幫忙收碗盤',         points: 1 },
+  { id: 'd2',  emoji: '🧹', text: '掃地或拖地',         points: 2 },
+  { id: 'd3',  emoji: '🧦', text: '自己摺衣服',         points: 1 },
+  { id: 'd4',  emoji: '📚', text: '主動完成功課',       points: 3 },
+  { id: 'd5',  emoji: '🦷', text: '自己刷牙洗臉',       points: 1 },
+  { id: 'd8',  emoji: '🤝', text: '對人有禮貌',         points: 1 },
+  { id: 'd9',  emoji: '😊', text: '幫助弟弟妹妹',       points: 2 },
+  { id: 'd10', emoji: '🌱', text: '幫忙澆花/做家事',   points: 2 },
+  { id: 'd11', emoji: '🧠', text: '看書 30 分鐘',       points: 3 },
+  { id: 'd12', emoji: '💪', text: '運動 30 分鐘',       points: 3 },
+  { id: 'd13', emoji: '🌟', text: '今天特別乖',         points: 5 },
+  { id: 'd14', emoji: '🏆', text: '完成一件困難的事',   points: 8 },
+  { id: 'd15', emoji: '🎉', text: '超棒的特別表現',     points: 10 },
 ];
 
 // ── 每日任務題庫 ──────────────────────────────────────────────
@@ -356,7 +359,7 @@ function ParentScreen({ stars, xp=0, stage=0, deeds, dailyTasks, collection, onC
             />
             <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
               <span style={{ fontSize:12, fontWeight:700 }}>點數：</span>
-              {[1,2,3,5].map(p=>(
+              {[1,2,3,5,8,10].map(p=>(
                 <button key={p} onClick={()=>setNewPoints(p)} style={{
                   background: newPoints===p?COLORS.purple:'#fff',
                   border:'2px solid #1a1a1a', borderRadius:8,
