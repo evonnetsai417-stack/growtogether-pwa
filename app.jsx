@@ -88,7 +88,8 @@ function randomAnimal() {
 }
 
 function GameApp({ playerId, player, onSwitchPlayer }) {
-  const initial = loadPlayerSave(playerId) || {
+  const rawSave = loadPlayerSave(playerId);
+  const initial = rawSave ? { xp: 0, ...rawSave } : {
     animalId: randomAnimal(),
     stage: STAGE.EGG,
     petName: '寵物蛋',
