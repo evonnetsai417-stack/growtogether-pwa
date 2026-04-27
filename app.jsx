@@ -151,6 +151,8 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
   const [draggedItem, setDraggedItem] = React.useState(null);
   const [petPos, setPetPos] = React.useState({ x:0, target:0, dir:1 });
   const [celebration, setCelebration] = React.useState(null);
+  const [showNaming, setShowNaming] = React.useState(false);
+  const [nameInput, setNameInput] = React.useState('');
   const [showOnboarding, setShowOnboarding] = React.useState(
     !localStorage.getItem('gt_onboarded')
   );
@@ -185,9 +187,9 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
 
         if(s.stage===STAGE.EGG){
           if(s.xp>=XP_TO_HATCH){
-            const name=ANIMALS.find(a=>a.id===s.animalId)?.name||'寵物';
-            setTimeout(()=>{ showToast(`🐣 孵化了！是${name}！`,COLORS.secondary); Sound.hatch(); },100);
-            return{...s,stage:STAGE.BABY,age:0,petName:name,dailyTasks};
+            const speciesName=ANIMALS.find(a=>a.id===s.animalId)?.name||'寵物';
+            setTimeout(()=>{ Sound.hatch(); setNameInput(speciesName); setShowNaming(true); },300);
+            return{...s,stage:STAGE.BABY,age:0,petName:speciesName,dailyTasks};
           }
           return{...s,age:s.age+1,dailyTasks};
         }
@@ -454,11 +456,11 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
         </div>
       )}
 
-      {/* 寵物名字 */}
+      {/* 寵物名字（可點擊改名）*/}
       {state.stage!==STAGE.EGG&&(
-        <div style={{ position:'absolute',top:174,left:'50%',transform:'translateX(-50%)',background:'#fff',border:'2.5px solid #1a1a1a',borderRadius:999,padding:'3px 14px',fontSize:13,fontWeight:800,boxShadow:'0 2px 0 #1a1a1a',zIndex:10,whiteSpace:'nowrap' }}>
-          {state.petName}
-        </div>
+        <button onClick={()=>{ setNameInput(state.petName); setShowNaming(true); }} style={{ position:'absolute',top:174,left:'50%',transform:'translateX(-50%)',background:'#fff',border:'2.5px solid #1a1a1a',borderRadius:999,padding:'3px 14px',fontSize:13,fontWeight:800,boxShadow:'0 2px 0 #1a1a1a',zIndex:10,whiteSpace:'nowrap',cursor:'pointer' }}>
+          ✏️ {state.petName}
+        </button>
       )}
 
       {/* 寵物（costume 已在 SVG 內部跟著動）*/}
@@ -515,18 +517,19 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
           </div>
         )}
 
-        {/* 6 個按鈕合一排：道具 + 功能 */}
-        <div style={{ display:'flex', justifyContent:'space-around', alignItems:'flex-end', gap:4, background:'rgba(255,255,255,0.88)', backdropFilter:'blur(8px)', border:'2.5px solid #1a1a1a', borderRadius:18, padding:'10px 8px 8px', boxShadow:'0 3px 0 #1a1a1a' }}>
-          {/* 食物/玩具/清潔 — 道具快捷 */}
-          {state.stage!==STAGE.EGG && [
+        {/* 6 個按鈕合一排，平均分配 */}
+        <div style={{ display:'flex', alignItems:'flex-end', background:'rgba(255,255,255,0.88)', backdropFilter:'blur(8px)', border:'2.5px solid #1a1a1a', borderRadius:18, padding:'10px 4px 8px', boxShadow:'0 3px 0 #1a1a1a' }}>
+          {/* 食物/玩具/清潔 */}
+          {[
             {type:'food', color:COLORS.primary,   label:'食物'},
             {type:'toy',  color:COLORS.blue,       label:'玩具'},
             {type:'care', color:COLORS.secondary,  label:'清潔'},
           ].map(({type,color,label})=>{
             const it=quickItems[type];
+            const disabled=state.stage===STAGE.EGG;
             return (
-              <div key={type} style={{ flex:1, textAlign:'center' }}>
-                {it ? (
+              <div key={type} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                {!disabled && it ? (
                   <button draggable onDragStart={()=>setDraggedItem({type,item:it})}
                     onClick={()=>{ if(type==='food')feed(it); else if(type==='toy')playWith(it); else clean(it); }}
                     style={{ width:50,height:50,borderRadius:12,background:color,border:'2.5px solid #1a1a1a',fontSize:24,cursor:'grab',boxShadow:'0 3px 0 #1a1a1a',position:'relative',padding:0 }}>
@@ -534,25 +537,25 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
                     <div style={{ position:'absolute',top:-5,right:-5,background:'#fff',color:'#1a1a1a',border:'2px solid #1a1a1a',borderRadius:'50%',width:18,height:18,fontSize:10,fontWeight:900,display:'flex',alignItems:'center',justifyContent:'center' }}>{state.inventory[it.id]}</div>
                   </button>
                 ) : (
-                  <button onClick={()=>setScreen('shop')} style={{ width:50,height:50,borderRadius:12,background:'#fff',border:'2.5px dashed #bbb',fontSize:20,cursor:'pointer',color:'#bbb' }}>+</button>
+                  <button onClick={()=>!disabled&&setScreen('shop')} style={{ width:50,height:50,borderRadius:12,background:'#fff',border:'2.5px dashed #ccc',fontSize:20,cursor:disabled?'default':'pointer',color:'#ccc',opacity:disabled?0.4:1 }}>+</button>
                 )}
-                <div style={{ fontSize:10,fontWeight:700,marginTop:3,color:'#555' }}>{label}</div>
+                <div style={{ fontSize:10,fontWeight:700,color:'#666' }}>{label}</div>
               </div>
             );
           })}
-          {/* 蛋階段：道具欄位 placeholder */}
-          {state.stage===STAGE.EGG && [1,2,3].map(i=>(
-            <div key={i} style={{ flex:1, textAlign:'center' }}>
-              <div style={{ width:50,height:50,margin:'0 auto',borderRadius:12,background:'rgba(255,255,255,0.3)',border:'2px dashed #ccc' }}/>
-              <div style={{ fontSize:10,marginTop:3,color:'#ccc' }}>—</div>
+          {/* 分隔線 */}
+          <div style={{ width:1,height:44,background:'#ddd',alignSelf:'center',flexShrink:0,margin:'0 2px' }}/>
+          {/* 商店/遊戲/醫生 — 同樣 flex:1 */}
+          {[
+            {icon:'🏪',label:'商店',  color:COLORS.primary,   onClick:()=>setScreen('shop'),   disabled:false},
+            {icon:'🎮',label:'遊戲',  color:COLORS.pink,      onClick:()=>setScreen('gamemenu'),disabled:state.stage===STAGE.EGG||state.sleeping},
+            {icon:'🏥',label:'醫生',  color:COLORS.secondary, onClick:visitDoctor,              disabled:state.stage===STAGE.EGG, badge:state.health<50?'!':null},
+          ].map(btn=>(
+            <div key={btn.label} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+              <IconButton icon={btn.icon} label="" color={btn.color} onClick={btn.onClick} disabled={btn.disabled} badge={btn.badge||null}/>
+              <div style={{ fontSize:10,fontWeight:700,color:'#666' }}>{btn.label}</div>
             </div>
           ))}
-          {/* 分隔 */}
-          <div style={{ width:1, height:44, background:'#ddd', alignSelf:'center', margin:'0 2px' }}/>
-          {/* 商店/遊戲/醫生 */}
-          <IconButton icon="🏪" label="商店"  color={COLORS.primary}   onClick={()=>setScreen('shop')}/>
-          <IconButton icon="🎮" label="遊戲"  color={COLORS.pink}      onClick={()=>setScreen('gamemenu')} disabled={state.stage===STAGE.EGG||state.sleeping}/>
-          <IconButton icon="🏥" label="醫生"  color={COLORS.secondary} onClick={visitDoctor} disabled={state.stage===STAGE.EGG} badge={state.health<50?'!':null}/>
         </div>
       </div>
 
@@ -592,6 +595,33 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
       {screen==='fruit'&&typeof CatchFruitGame!=='undefined'&&<CatchFruitGame onClose={()=>setScreen(null)} onWin={c=>setState(s=>({...s,coins:s.coins+c,fun:Math.min(MAX_STAT,s.fun+15)}))}/>}
       {screen==='memory'&&typeof MemoryGame!=='undefined'&&<MemoryGame onClose={()=>setScreen(null)} onWin={c=>setState(s=>({...s,coins:s.coins+c,fun:Math.min(MAX_STAT,s.fun+15)}))}/>}
       {screen==='rhythm'&&typeof RhythmJumpGame!=='undefined'&&<RhythmJumpGame onClose={()=>setScreen(null)} onWin={c=>setState(s=>({...s,coins:s.coins+c,fun:Math.min(MAX_STAT,s.fun+15)}))}/>}
+
+      {/* 命名 Modal */}
+      {showNaming&&(
+        <div style={{ position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',zIndex:700,display:'flex',alignItems:'center',justifyContent:'center',padding:24 }}>
+          <div style={{ background:'#FFF4DD',border:'3.5px solid #1a1a1a',borderRadius:24,padding:24,maxWidth:300,width:'100%',textAlign:'center',boxShadow:'0 8px 0 #1a1a1a',animation:'popIn 0.3s cubic-bezier(.34,1.56,.64,1)' }}>
+            <div style={{ fontSize:48,marginBottom:8 }}>✏️</div>
+            <div style={{ fontSize:18,fontWeight:900,marginBottom:6,fontFamily:'"Noto Sans TC",system-ui',color:'#1a1a1a' }}>幫你的寵物取個名字！</div>
+            <div style={{ fontSize:12,color:'#888',fontWeight:700,marginBottom:14,fontFamily:'"Noto Sans TC",system-ui' }}>最多 8 個字</div>
+            <input
+              value={nameInput}
+              onChange={e=>setNameInput(e.target.value.slice(0,8))}
+              onKeyDown={e=>e.key==='Enter'&&nameInput.trim()&&(setState(s=>({...s,petName:nameInput.trim()})),setShowNaming(false),nameInput.trim()!==state.petName&&showToast(`🎉 ${nameInput.trim()} 好可愛的名字！`,COLORS.pink))}
+              maxLength={8}
+              autoFocus
+              style={{ width:'100%',border:'2.5px solid #1a1a1a',borderRadius:14,padding:'12px',fontSize:22,fontWeight:800,textAlign:'center',marginBottom:16,boxSizing:'border-box',fontFamily:'"Noto Sans TC",system-ui' }}
+            />
+            <button onClick={()=>{
+              if(!nameInput.trim()) return;
+              setState(s=>({...s,petName:nameInput.trim()}));
+              setShowNaming(false);
+              showToast(`🎉 ${nameInput.trim()} 好可愛的名字！`,COLORS.pink);
+            }} style={{ width:'100%',background:COLORS.secondary,border:'3px solid #1a1a1a',borderRadius:14,padding:'12px',fontSize:16,fontWeight:900,cursor:'pointer',fontFamily:'"Noto Sans TC",system-ui',boxShadow:'0 4px 0 #1a1a1a' }}>
+              確定！
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 慶祝動畫 */}
       {celebration&&<Celebration pts={celebration.pts} reason={celebration.reason}/>}
