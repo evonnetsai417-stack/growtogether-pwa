@@ -387,8 +387,8 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
       position: 'relative', overflow: 'hidden', transition: 'background 0.8s',
       fontFamily: '"Noto Sans TC", system-ui, sans-serif',
     }}>
-      {/* 太陽/月亮 */}
-      <div style={{ position:'absolute', top:12, right:16, fontSize:30, animation:'gentleSpin 20s linear infinite' }}>
+      {/* 太陽/月亮 — 點擊進家長模式 */}
+      <div onClick={() => setScreen('parent')} style={{ position:'absolute', top:12, right:16, fontSize:30, animation:'gentleSpin 20s linear infinite', cursor:'pointer', zIndex:12 }}>
         {state.sleeping ? '🌙' : '☀️'}
       </div>
       {!state.sleeping && (<>
@@ -406,32 +406,15 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
         <PlayerBadge player={player} onClick={onSwitchPlayer} />
       </div>
 
-      {/* 頂部資訊 */}
-      <div style={{ position:'absolute', top:90, left:12, right:12, display:'flex', justifyContent:'space-between', alignItems:'flex-start', zIndex:10 }}>
-        <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-          <CoinBadge icon="🪙" label="金幣" value={state.coins} />
-          <CoinBadge icon="⭐" label="點數" value={state.stars} color="#FFB3CC" />
-        </div>
-        <div style={{ display:'flex', flexDirection:'column', gap:4, alignItems:'flex-end' }}>
-          <button onClick={() => setScreen('parent')} style={{
-            background: COLORS.purple, color:'#1a1a1a',
-            border:'2.5px solid #1a1a1a', borderRadius:999,
-            padding:'5px 12px', fontWeight:800, fontSize:12, cursor:'pointer',
-            boxShadow:'0 2px 0 #1a1a1a', fontFamily:'"Noto Sans TC",system-ui',
-            display:'flex', alignItems:'center', gap:4,
-          }}><span style={{ fontSize:14 }}>👨‍👩‍👧</span><span>家長模式</span></button>
-          <CoinBadge
-            icon={state.stage===STAGE.EGG?'🥚':state.stage===STAGE.BABY?'🐣':'🌟'}
-            label="階段"
-            value={state.stage===STAGE.EGG?'蛋':state.stage===STAGE.BABY?'幼年':'成年'}
-            color={COLORS.secondary}
-          />
-        </div>
+      {/* 頂部資訊 — 只保留金幣/點數 */}
+      <div style={{ position:'absolute', top:90, left:12, right:12, display:'flex', gap:8, zIndex:10 }}>
+        <CoinBadge icon="🪙" label="金幣" value={state.coins} />
+        <CoinBadge icon="⭐" label="點數" value={state.stars} color="#FFB3CC" />
       </div>
 
       {/* 狀態條 */}
       {state.stage !== STAGE.EGG && (
-        <div style={{ position:'absolute', top:162, left:12, right:12, display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, zIndex:10 }}>
+        <div style={{ position:'absolute', top:128, left:12, right:12, display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, zIndex:10 }}>
           <StatBar icon="🍚" label="餓" value={state.hunger} color={COLORS.primary} />
           <StatBar icon="😄" label="樂" value={state.fun}    color={COLORS.blue} />
           <StatBar icon="💤" label="累" value={state.energy} color={COLORS.purple} />
@@ -439,27 +422,10 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
         </div>
       )}
 
-      {/* 幼年成長 XP 條 */}
-      {state.stage === STAGE.BABY && (
-        <div style={{
-          position:'absolute', top:244, left:12, right:12, zIndex:10,
-          background:'rgba(255,255,255,0.85)', border:'2px solid #1a1a1a',
-          borderRadius:999, padding:'4px 10px 4px 6px',
-          display:'flex', alignItems:'center', gap:6, boxShadow:'0 2px 0 #1a1a1a',
-        }}>
-          <span style={{ fontSize:13 }}>✨</span>
-          <span style={{ fontSize:11, fontWeight:800, flexShrink:0 }}>成長</span>
-          <div style={{ flex:1, height:10, borderRadius:999, background:'#F0E5D0', border:'2px solid #1a1a1a', overflow:'hidden' }}>
-            <div style={{ width:`${babyXpPct}%`, height:'100%', background:COLORS.purple, transition:'width 0.5s' }} />
-          </div>
-          <span style={{ fontSize:11, fontWeight:800, color:'#666', flexShrink:0 }}>{babyXpPct}%</span>
-        </div>
-      )}
-
       {/* 健康警示 */}
       {state.health < 50 && state.stage !== STAGE.EGG && (
         <div style={{
-          position:'absolute', top:state.stage===STAGE.BABY?272:234, left:12, right:12,
+          position:'absolute', top:210, left:12, right:12,
           background:'#FFE5E5', border:'2.5px solid #E85C5C', borderRadius:12,
           padding:'4px 10px', fontSize:12, fontWeight:800, color:'#E85C5C',
           textAlign:'center', zIndex:10, animation:'pulse 1s infinite',
@@ -469,7 +435,7 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
       {/* 寵物名字 */}
       {state.stage !== STAGE.EGG && (
         <div style={{
-          position:'absolute', top:278, left:'50%', transform:'translateX(-50%)',
+          position:'absolute', top:230, left:'50%', transform:'translateX(-50%)',
           background:'#fff', border:'2.5px solid #1a1a1a', borderRadius:999,
           padding:'3px 14px', fontSize:13, fontWeight:800,
           boxShadow:'0 2px 0 #1a1a1a', zIndex:10,
@@ -479,7 +445,7 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
       {/* 寵物互動區 */}
       <div onClick={pokePet} onDragOver={e=>e.preventDefault()} onDrop={handleDrop}
         style={{
-          position:'absolute', top:304, left:'50%',
+          position:'absolute', top:256, left:'50%',
           transform:`translateX(calc(-50% + ${petPos.x}px))`,
           width:220, height:240,
           display:'flex', alignItems:'center', justifyContent:'center',
@@ -525,27 +491,46 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
         }}>{f.text}</div>
       ))}
 
-      {/* 蛋：XP 進度泡泡 */}
+      {/* 蛋：點擊提示泡泡 */}
       {state.stage === STAGE.EGG && (
-        <div style={{ position:'absolute', top:470, left:20, right:20, zIndex:10 }}>
-          <Bubble>點蛋蛋或完成好行為讓牠孵化！</Bubble>
-          <div style={{
-            marginTop:8, background:'rgba(255,255,255,0.88)',
-            border:'2.5px solid #1a1a1a', borderRadius:999,
-            padding:'4px 10px 4px 6px',
-            display:'flex', alignItems:'center', gap:6, boxShadow:'0 2px 0 #1a1a1a',
-          }}>
-            <span style={{ fontSize:14 }}>🥚</span>
-            <div style={{ flex:1, height:12, borderRadius:999, background:'#F0E5D0', border:'2px solid #1a1a1a', overflow:'hidden' }}>
-              <div style={{ width:`${eggXpPct}%`, height:'100%', background:'linear-gradient(90deg,#F5C24E,#F5A845)', transition:'width 0.5s' }} />
-            </div>
-            <span style={{ fontSize:12, fontWeight:900, flexShrink:0 }}>{state.xp}/{XP_TO_HATCH} XP</span>
-          </div>
+        <div style={{ position:'absolute', top:490, left:0, right:0, display:'flex', justifyContent:'center', zIndex:10 }}>
+          <Bubble>點點我讓我孵化！</Bubble>
         </div>
       )}
 
       {/* 底部 */}
       <div style={{ position:'absolute', bottom:18, left:12, right:12, zIndex:10 }}>
+
+        {/* 升級鼓勵條 */}
+        {state.stage !== STAGE.ADULT && (() => {
+          const isEgg = state.stage === STAGE.EGG;
+          const target = isEgg ? XP_TO_HATCH : XP_TO_ADULT;
+          const pct = Math.min(100, Math.round((state.xp / target) * 100));
+          const remaining = Math.max(0, target - state.xp);
+          const msg = isEgg
+            ? `再 ${remaining} XP 就孵化！做好事、餵食、玩耍都能得 XP 🥚`
+            : `再 ${remaining} XP 就長大！繼續加油 🌱`;
+          return (
+            <div style={{
+              background:'rgba(255,255,255,0.92)',
+              border:'2.5px solid #1a1a1a', borderRadius:14,
+              padding:'7px 12px', marginBottom:8,
+              boxShadow:'0 2px 0 #1a1a1a',
+            }}>
+              <div style={{ fontSize:11, fontWeight:800, color:'#555', marginBottom:5, fontFamily:'"Noto Sans TC",system-ui' }}>
+                {msg}
+              </div>
+              <div style={{ height:10, borderRadius:999, background:'#F0E5D0', border:'2px solid #1a1a1a', overflow:'hidden' }}>
+                <div style={{
+                  width:`${pct}%`, height:'100%',
+                  background: isEgg ? 'linear-gradient(90deg,#F5C24E,#F5A845)' : COLORS.purple,
+                  transition:'width 0.6s',
+                }} />
+              </div>
+            </div>
+          );
+        })()}
+
         {state.stage !== STAGE.EGG && (
           <div style={{
             background:'rgba(255,255,255,0.88)', backdropFilter:'blur(8px)',
