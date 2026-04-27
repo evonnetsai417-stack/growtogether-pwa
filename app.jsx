@@ -5,7 +5,7 @@ const MAX_STAT = 100;
 const XP_TO_HATCH = 50;
 const XP_TO_ADULT = 300;
 const MIN_BABY_AGE = 86400;
-const INTERACT_XP_DAILY_CAP = 15; // 每日互動 XP 上限，剩下要靠好行為
+const POKE_XP_DAILY_CAP = 5; // 每日點寵物最多貢獻 5 XP，餵食/玩耍/清潔不設上限
 
 // ── 音效系統（Web Audio API）─────────────────────────────────
 const Sound = (() => {
@@ -236,19 +236,20 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
   function showToast(msg,color=COLORS.primary){ setToast({msg,color,key:Date.now()}); setTimeout(()=>setToast(null),2400); }
   function showFloat(text,color,x=155,y=210){ const id=Date.now()+Math.random(); setFloats(f=>[...f,{id,text,color,x,y}]); setTimeout(()=>setFloats(f=>f.filter(i=>i.id!==id)),1300); }
 
-  // 互動 XP（每日有上限）
-  function addInteractXP(amount){
+  // 點寵物 XP（每日上限 5，避免無限點按）
+  function addPokeXP(){
     const today=todayStr();
     setState(s=>{
       const cap=s.interactXpToday;
       const usedToday=(cap&&cap.date===today)?cap.xp:0;
-      const canAdd=Math.max(0,Math.min(amount,INTERACT_XP_DAILY_CAP-usedToday));
-      if(canAdd<=0){
-        setTimeout(()=>showToast(rnd('capXp'),COLORS.purple),0);
-        return s;
-      }
-      return{...s,xp:s.xp+canAdd,interactXpToday:{date:today,xp:usedToday+canAdd}};
+      if(usedToday>=POKE_XP_DAILY_CAP) return s; // 今天戳夠了，不再給
+      return{...s,xp:s.xp+1,interactXpToday:{date:today,xp:usedToday+1}};
     });
+  }
+
+  // 照顧 XP（餵食/玩耍/清潔，不設每日上限）
+  function addCareXP(amount){
+    setState(s=>({...s,xp:s.xp+amount}));
   }
 
   function triggerCelebration(pts,reason){
@@ -260,15 +261,14 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
   // ── 互動函式 ────────────────────────────────────────────────
   function pokePet(){
     if(state.stage===STAGE.EGG){
-      addInteractXP(1);
-      showFloat('+XP',COLORS.purple,155,200);
+      addPokeXP();
       setPetBounce(b=>b+1);
       Sound.poke();
       return;
     }
     setHearts(h=>h+1);
     setState(s=>({...s,fun:Math.min(MAX_STAT,s.fun+3)}));
-    addInteractXP(1);
+    addPokeXP();
     setPetBounce(b=>b+1);
     showToast(rnd('poke'),COLORS.pink);
     Sound.poke();
@@ -280,7 +280,7 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
   function feed(item){
     if((state.inventory[item.id]||0)<=0) return;
     setState(s=>({...s,hunger:Math.min(MAX_STAT,s.hunger+(item.hunger||0)),fun:Math.min(MAX_STAT,s.fun+(item.fun||0)),inventory:{...s.inventory,[item.id]:s.inventory[item.id]-1}}));
-    addInteractXP(2);
+    addCareXP(3);
     showFloat(`+${item.hunger||0}`,COLORS.primary);
     showToast(rnd('feed'));
     setHearts(h=>h+1);
@@ -291,7 +291,7 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
   function playWith(item){
     if((state.inventory[item.id]||0)<=0) return;
     setState(s=>({...s,fun:Math.min(MAX_STAT,s.fun+(item.fun||0)),energy:Math.max(0,s.energy-5),inventory:{...s.inventory,[item.id]:s.inventory[item.id]-1}}));
-    addInteractXP(3);
+    addCareXP(4);
     showFloat(`+${item.fun||0}`,COLORS.blue);
     showToast(rnd('play'),COLORS.blue);
     setHearts(h=>h+2);
@@ -302,7 +302,7 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
   function clean(item){
     if((state.inventory[item.id]||0)<=0) return;
     setState(s=>({...s,clean:Math.min(MAX_STAT,s.clean+(item.clean||0)),health:Math.min(MAX_STAT,s.health+(item.health||0)),inventory:{...s.inventory,[item.id]:s.inventory[item.id]-1}}));
-    addInteractXP(1);
+    addCareXP(2);
     showFloat(`+${item.clean||item.health||0}`,COLORS.secondary);
     showToast(rnd('clean'),COLORS.secondary);
     Sound.clean();
@@ -326,26 +326,29 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
     setState(s=>({...s,costume:s.costume===id?null:id}));
   }
 
+  // 家長給獎勵：只影響星星/金幣，不影響 XP（XP 只能靠照顧寵物）
   function addPoints(pts,reason){
     setState(s=>{
       let stars=s.stars+pts, coins=s.coins;
       const bonus=Math.floor(stars/10);
       if(bonus>0){ coins+=bonus; stars=stars%10; }
-      return{...s,stars,coins,xp:s.xp+pts*5};
+      return{...s,stars,coins};
     });
     triggerCelebration(pts,reason);
   }
 
+  // 每日任務完成：給獎勵（星星），不給 XP
   function completeDailyTask(taskId){
     if(!state.dailyTasks) return;
     const task=state.dailyTasks.tasks.find(t=>t.id===taskId);
     if(!task||state.dailyTasks.doneIds.includes(taskId)) return;
+    const pts=2; // 每個每日任務給 2 顆星
     setState(s=>{
-      let stars=s.stars+1, coins=s.coins;
+      let stars=s.stars+pts, coins=s.coins;
       if(Math.floor(stars/10)>0){ coins+=Math.floor(stars/10); stars=stars%10; }
-      return{...s,stars,coins,xp:s.xp+task.xp,dailyTasks:{...s.dailyTasks,doneIds:[...s.dailyTasks.doneIds,taskId]}};
+      return{...s,stars,coins,dailyTasks:{...s.dailyTasks,doneIds:[...s.dailyTasks.doneIds,taskId]}};
     });
-    triggerCelebration(1,task.text);
+    triggerCelebration(pts,task.text);
   }
 
   function clearPoop(){
@@ -364,7 +367,7 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
   // 搖晃搔癢
   React.useEffect(()=>{
     let last={x:0,y:0,z:0},cnt=0,lastT=0;
-    const onMotion=e=>{ const a=e.accelerationIncludingGravity; if(!a)return; const d=Math.abs((a.x||0)-last.x)+Math.abs((a.y||0)-last.y)+Math.abs((a.z||0)-last.z); last={x:a.x||0,y:a.y||0,z:a.z||0}; if(d>25){cnt++;if(cnt>3&&Date.now()-lastT>2000){lastT=Date.now();cnt=0;if(state.stage!==STAGE.EGG){setState(s=>({...s,fun:Math.min(MAX_STAT,s.fun+8)}));addInteractXP(1);setHearts(h=>h+3);showToast('哈哈！好癢好癢！停下來啦！',COLORS.pink);Sound.poke();}}} };
+    const onMotion=e=>{ const a=e.accelerationIncludingGravity; if(!a)return; const d=Math.abs((a.x||0)-last.x)+Math.abs((a.y||0)-last.y)+Math.abs((a.z||0)-last.z); last={x:a.x||0,y:a.y||0,z:a.z||0}; if(d>25){cnt++;if(cnt>3&&Date.now()-lastT>2000){lastT=Date.now();cnt=0;if(state.stage!==STAGE.EGG){setState(s=>({...s,fun:Math.min(MAX_STAT,s.fun+8)}));addPokeXP();setHearts(h=>h+3);showToast('哈哈！好癢好癢！停下來啦！',COLORS.pink);Sound.poke();}}} };
     window.addEventListener('devicemotion',onMotion);
     return ()=>window.removeEventListener('devicemotion',onMotion);
   },[state.stage]);
@@ -393,12 +396,11 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
     if(state.stage===STAGE.ADULT) return null;
     const target=state.stage===STAGE.EGG?XP_TO_HATCH:XP_TO_ADULT;
     const pct=Math.min(100,Math.round(state.xp/target*100));
-    const starsNeeded=Math.ceil(Math.max(0,target-state.xp)/5);
-    if(pct===0)   return state.stage===STAGE.EGG?'做好事、讓爸媽表揚你，就能孵出來！🥚':'多做好事讓牠長大！⭐';
-    if(pct<30)    return `加油！差不多再 ${starsNeeded} 個好行為就有進展了！`;
-    if(pct<60)    return `做得很好！再 ${starsNeeded} 個好行為！✨`;
-    if(pct<90)    return `快到了！再 ${starsNeeded} 個就能${state.stage===STAGE.EGG?'孵化':'長大'}！🎉`;
-    return `就差一點點！加油衝刺！🌟`;
+    if(pct===0)   return state.stage===STAGE.EGG?'好好餵牠、陪牠玩，牠就會孵化！🥚':'餵食、玩耍、清潔都能讓牠成長！';
+    if(pct<30)    return '繼續照顧牠，給牠食物和玩耍時間！';
+    if(pct<60)    return '照顧得很好！繼續餵食和玩耍！✨';
+    if(pct<90)    return `快${state.stage===STAGE.EGG?'孵化':'長大'}了！再多照顧幾次！🎉`;
+    return `就差一點點！🌟`;
   },[state.stage,state.xp]);
 
 

@@ -301,7 +301,7 @@ function ParentScreen({ stars, xp=0, stage=0, deeds, dailyTasks, collection, onC
                 <div style={{ width:`${Math.min(100,Math.round(xp/(stage===0?50:300)*100))}%`, height:'100%', background:'#B89FE8', transition:'width 0.5s' }} />
               </div>
               <div style={{ fontSize:11, color:'#888', marginTop:4, fontWeight:600 }}>
-                每給 1 ⭐ → +5 XP　每日任務完成 → +8-10 XP
+                XP 只能靠餵食、玩耍、清潔累積，⭐ 是購物用的獎勵
               </div>
             </div>
           )}
