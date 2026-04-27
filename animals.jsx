@@ -606,7 +606,10 @@ const ANIMALS = [
 // ─────────────────────────────────────────────────────────────
 // Pet 渲染元件 — 含完整動畫
 // ─────────────────────────────────────────────────────────────
-function Pet({ animalId = 'bear', mood = 'normal', size = 220, dirty = false, sleeping = false, action = null, walking = false, facing = 1 }) {
+// 裝扮在 SVG 座標（200×200 viewBox）裡的位置
+const COSTUME_SVG_Y = { head: 38, face: 80, neck: 110 };
+
+function Pet({ animalId = 'bear', mood = 'normal', size = 220, dirty = false, sleeping = false, action = null, walking = false, facing = 1, costume = null }) {
   // action: null | 'wave' | 'jump' | 'dance' | 'cheer' | 'eat' | 'play'
   const animal = ANIMALS.find(a => a.id === animalId) || ANIMALS[0];
   const Render = animal.render;
@@ -678,6 +681,18 @@ function Pet({ animalId = 'bear', mood = 'normal', size = 220, dirty = false, sl
         transformOrigin: '100px 130px',
       }}>
         <Render mood={sleeping ? 'sleepy' : mood} armSwing={armSwing} />
+        {/* 裝扮：跟動物同一個 g，一起上下動 */}
+        {costume && (() => {
+          const c = (window.COSTUMES || []).find(x => x.id === costume);
+          if (!c) return null;
+          const y = COSTUME_SVG_Y[c.pos] || 38;
+          return (
+            <text x={100} y={y} textAnchor="middle" fontSize={22}
+              style={{ userSelect: 'none', pointerEvents: 'none' }}>
+              {c.emoji}
+            </text>
+          );
+        })()}
       </g>
       {/* 髒髒 */}
       {dirty && (

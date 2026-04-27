@@ -401,13 +401,10 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
     return `就差一點點！加油衝刺！🌟`;
   },[state.stage,state.xp]);
 
-  // 裝扮位置（head ≈ 耳頂，face ≈ 眼睛，neck ≈ 脖子）
-  const COSTUME_POS={ head:{top:28,fontSize:26}, face:{top:40,fontSize:22}, neck:{top:68,fontSize:26} };
-  const activeCostume=COSTUMES.find(c=>c.id===state.costume);
 
   const renderPet=()=>{
     if(state.stage===STAGE.EGG) return <Egg size={220} cracked={state.xp>=XP_TO_HATCH*0.7} />;
-    return <Pet animalId={state.animalId} mood={mood} sleeping={state.sleeping} dirty={state.clean<40} size={220} action={petAction} walking={isWalking&&!petAction} facing={petPos.dir} />;
+    return <Pet animalId={state.animalId} mood={mood} sleeping={state.sleeping} dirty={state.clean<40} size={220} action={petAction} walking={isWalking&&!petAction} facing={petPos.dir} costume={state.costume} />;
   };
 
   const isDay=!state.sleeping;
@@ -450,31 +447,25 @@ function GameApp({ playerId, player, onSwitchPlayer }) {
 
       {/* 健康警示 */}
       {state.health<50&&state.stage!==STAGE.EGG&&(
-        <div style={{ position:'absolute',top:152,left:12,right:12,background:'#FFE5E5',border:'2.5px solid #E85C5C',borderRadius:12,padding:'4px 10px',fontSize:12,fontWeight:800,color:'#E85C5C',textAlign:'center',zIndex:10,animation:'pulse 1s infinite' }}>
+        <div style={{ position:'absolute',top:162,left:12,right:12,background:'#FFE5E5',border:'2.5px solid #E85C5C',borderRadius:12,padding:'4px 10px',fontSize:12,fontWeight:800,color:'#E85C5C',textAlign:'center',zIndex:10,animation:'pulse 1s infinite' }}>
           ⚠️ {state.petName}生病了！需要看醫生
         </div>
       )}
 
       {/* 寵物名字 */}
       {state.stage!==STAGE.EGG&&(
-        <div style={{ position:'absolute',top:162,left:'50%',transform:'translateX(-50%)',background:'#fff',border:'2.5px solid #1a1a1a',borderRadius:999,padding:'3px 14px',fontSize:13,fontWeight:800,boxShadow:'0 2px 0 #1a1a1a',zIndex:10 }}>
+        <div style={{ position:'absolute',top:174,left:'50%',transform:'translateX(-50%)',background:'#fff',border:'2.5px solid #1a1a1a',borderRadius:999,padding:'3px 14px',fontSize:13,fontWeight:800,boxShadow:'0 2px 0 #1a1a1a',zIndex:10,whiteSpace:'nowrap' }}>
           {state.petName}
-          {activeCostume&&<span style={{marginLeft:6}}>{activeCostume.emoji}</span>}
         </div>
       )}
 
-      {/* 寵物 + 裝扮 */}
+      {/* 寵物（costume 已在 SVG 內部跟著動）*/}
       <div onClick={pokePet} onDragOver={e=>e.preventDefault()} onDrop={handleDrop}
-        style={{ position:'absolute',top:182,left:'50%',transform:`translateX(calc(-50% + ${petPos.x}px))`,width:220,height:240,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',zIndex:5,animation:petBounce>0?'pokeBounce 0.4s':'none' }}
+        style={{ position:'absolute',top:200,left:'50%',transform:`translateX(calc(-50% + ${petPos.x}px))`,width:220,height:240,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',zIndex:5,animation:petBounce>0?'pokeBounce 0.4s':'none' }}
         key={petBounce}>
         <div style={{ position:'absolute',bottom:8,left:'50%',transform:'translateX(-50%)',width:130,height:14,background:'rgba(0,0,0,0.18)',borderRadius:'50%',filter:'blur(2px)' }} />
-        <div style={{ position:'relative' }}>
+        <div>
           {renderPet()}
-          {activeCostume&&state.stage!==STAGE.EGG&&(
-            <div style={{ position:'absolute',left:'50%',transform:'translateX(-50%)',pointerEvents:'none',lineHeight:1,...COSTUME_POS[activeCostume.pos] }}>
-              {activeCostume.emoji}
-            </div>
-          )}
         </div>
         {state.poop>0&&state.stage!==STAGE.EGG&&(
           <div style={{ position:'absolute',bottom:0,left:20,display:'flex',gap:4 }}>
