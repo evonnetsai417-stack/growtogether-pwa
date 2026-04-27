@@ -169,12 +169,23 @@ function InventoryScreen({ inventory, onUse, onClose, type, title }) {
 // ─────────────────────────────────────────────────────────────
 // 家長模式 — 獎勵點數
 // ─────────────────────────────────────────────────────────────
-function ParentScreen({ stars, deeds, onClose, onAddPoints, onAddDeed, onRemoveDeed }) {
+function ParentScreen({ stars, xp = 0, stage = 0, deeds, onClose, onAddPoints, onAddDeed, onRemoveDeed }) {
   const [showAdd, setShowAdd] = React.useState(false);
   const [newText, setNewText] = React.useState('');
   const [newPoints, setNewPoints] = React.useState(1);
   const [unlocked, setUnlocked] = React.useState(false);
   const [pin, setPin] = React.useState('');
+  const [pinError, setPinError] = React.useState(false);
+
+  function tryUnlock() {
+    if (pin === '1234') {
+      setUnlocked(true);
+      setPinError(false);
+    } else {
+      setPinError(true);
+      setPin('');
+    }
+  }
 
   if (!unlocked) {
     return (
@@ -182,28 +193,34 @@ function ParentScreen({ stars, deeds, onClose, onAddPoints, onAddDeed, onRemoveD
         <div style={{ textAlign: 'center', padding: 12, fontFamily: '"Noto Sans TC", system-ui' }}>
           <div style={{ fontSize: 48, marginBottom: 8 }}>🔒</div>
           <div style={{ fontSize: 14, fontWeight: 700, color: '#666', marginBottom: 14 }}>
-            請輸入大人的密碼（隨意輸入即可）
+            請輸入家長密碼
           </div>
           <input
             type="password"
             value={pin}
-            onChange={e => setPin(e.target.value)}
-            placeholder="****"
+            onChange={e => { setPin(e.target.value); setPinError(false); }}
+            onKeyDown={e => e.key === 'Enter' && tryUnlock()}
+            placeholder="••••"
+            maxLength={8}
             style={{
               width: '100%', padding: '10px 14px',
-              border: '2.5px solid #1a1a1a',
+              border: `2.5px solid ${pinError ? '#E85C5C' : '#1a1a1a'}`,
               borderRadius: 12,
-              fontSize: 18, fontWeight: 800, textAlign: 'center',
-              boxSizing: 'border-box', marginBottom: 14,
+              fontSize: 22, fontWeight: 800, textAlign: 'center',
+              boxSizing: 'border-box', marginBottom: 6,
               fontFamily: 'system-ui',
+              background: pinError ? '#FFF0F0' : '#fff',
             }}
           />
-          <ChunkyButton fullWidth color={COLORS.purple} onClick={() => setUnlocked(true)}>
+          {pinError && (
+            <div style={{ fontSize: 12, color: '#E85C5C', fontWeight: 700, marginBottom: 10 }}>
+              密碼錯誤，請再試一次
+            </div>
+          )}
+          {!pinError && <div style={{ marginBottom: 14 }} />}
+          <ChunkyButton fullWidth color={COLORS.purple} onClick={tryUnlock}>
             進入家長模式
           </ChunkyButton>
-          <div style={{ fontSize: 11, color: '#999', marginTop: 10 }}>
-            （示範用，任意按下即可進入）
-          </div>
         </div>
       </Modal>
     );
@@ -228,6 +245,30 @@ function ParentScreen({ stars, deeds, onClose, onAddPoints, onAddDeed, onRemoveD
               <div style={{ fontSize: 14, fontWeight: 800 }}>還差 {10 - (stars % 10)} ⭐</div>
             </div>
           </div>
+
+          {/* XP 成長進度 */}
+          {stage < 2 && (
+            <div style={{ marginTop: 10, padding: '8px 10px', background: '#F9F4FF', borderRadius: 10, border: '2px solid #B89FE8' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ fontSize: 12, fontWeight: 800, color: '#7A5ABF' }}>
+                  {stage === 0 ? '🥚 孵化進度' : '🌱 成長進度'}
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 800, color: '#7A5ABF' }}>
+                  {xp} / {stage === 0 ? 50 : 300} XP
+                </span>
+              </div>
+              <div style={{ height: 10, borderRadius: 999, background: '#E8D5FF', border: '1.5px solid #B89FE8', overflow: 'hidden' }}>
+                <div style={{
+                  width: `${Math.min(100, Math.round(xp / (stage === 0 ? 50 : 300) * 100))}%`,
+                  height: '100%', background: '#B89FE8', transition: 'width 0.5s',
+                }} />
+              </div>
+              <div style={{ fontSize: 11, color: '#888', marginTop: 4, fontWeight: 600 }}>
+                每給 1 ⭐ 獎勵 → +5 XP　餵食 +2　玩耍 +3　清潔 +1
+              </div>
+            </div>
+          )}
+
           <div style={{
             marginTop: 10, height: 14, borderRadius: 999,
             background: '#F0E5D0', border: '2px solid #1a1a1a',
